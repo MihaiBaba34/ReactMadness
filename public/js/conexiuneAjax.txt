@@ -1,0 +1,89 @@
+function getDataFromDB()
+{
+	alert('getDataFromDB() a fost apelata');
+	/*var xmlhttp = new XMLHttpRequest();
+	var url = "http://localhost/Vrei sa fii milionar/questionFunction2.php";
+
+xmlhttp.onreadystatechange=function() {
+    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+        parseJSONResponse(xmlhttp.responseText);
+    }
+}
+xmlhttp.open("GET", url, true);
+xmlhttp.send();
+*/
+}
+
+function parseJSONResponse(response) {
+
+    var arr = JSON.parse(response);
+    alert(arr.Intrebare);
+    var i;
+    var out = '<table align = "center" border="1px">';
+    out += '<tr>
+					<th colspan="2">' + 
+					arr.Intrebare + 
+				'</th>
+			
+			</tr>
+			
+			<tr>
+				<td id="A" width="50%" align="left" class="WithoutHighlight" onclick="testA()">
+					<div > '."A:  " + arr.Varianta_A +  
+					'</div>
+				</td>
+
+				<td id="B" align="left" class="WithoutHighlight" onclick="testB()">
+					<div> <p> 
+					'."B:  " + arr.Varianta_B + '
+
+					</p> </div>
+				</td>
+			</tr>
+
+			<tr>
+				<td id="C" align="left" class="WithoutHighlight" onclick="testC()">
+					<div> <p> 
+
+
+					'."C:  " + arr.Varianta_C + '</p> </div>
+				</td>
+
+				<td id="D" align="left" class="WithoutHighlight" onclick="testD()">
+					<div> <p> '. 'D:  ' + arr.Varianta_D + ' 	</p> </div>
+				</td>
+			</tr>';			
+
+    //for(i = 0; i < arr.length; i++) {
+        /*out += "<tr><td>" +
+        arr[i].Name +
+        "</td><td>" +
+        arr[i].City +
+        "</td><td>" +
+        arr[i].Country +
+        "</td></tr>";*/
+    //}
+    out += "</table>";
+    document.getElementById("TemplateIntrebare").innerHTML = out;
+
+}
+
+
+<tr>
+
+    			<td id="C" align="left" class="WithoutHighlight" onclick="testC()">
+    				<div>
+
+    					C:  ' + arr[0].Varianta_C + '
+
+    				</div>
+    			</td>
+    			<td>
+
+    				<div id="D" align="left" class="WithoutHighlight" onclick="testD()">
+    						D:  '+ arr[0].Varianta_D +'
+    				</div>
+    			
+    			</td>
+    			
+    		</tr> ';
