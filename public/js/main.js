@@ -66,33 +66,34 @@ $(document).ready(function () {
         e.preventDefault(); // avoid to execute the actual submit of the form.
 
         var url = "http://localhost:7000/loginUser";
+        var myData = "username=mihai&password=pass";
+        var method = "GET";
+
+
 
         var username = $("#formLoginUser").find('input[name="username"]').val();
         var password = $("#formLoginUser").find('input[name="password"]').val();
 
-        if (username === "" || password === "") {
-            alert("Username or password should not be empty!");
-        }
-        else {
-            console.log(username + " -> " + password);
+        // if (username === "" || password === "") {
+        //     alert("Username or password should not be empty!");
+        // }
+        // else {
 
+            //console.log($("#formLoginUser").serialize());
             $.ajax({
-                type: "POST",
+                type: method,
                 url: url,
-                data: $("#formLoginUser").serialize(), // serializes the form's elements.
+                data: myData, // serializes the form's elements.
                 success: function (data) {
                     
                     console.log("From authentication");
                     console.log(data);
                     console.log("From authentication");
-                    if(data === "success")
-                    {
-                        window.location.href = "/workspace";
-                    }
+            
                     
                 }
             });
-        }
+//        }
 
 
     });
