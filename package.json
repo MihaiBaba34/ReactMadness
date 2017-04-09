@@ -1,11 +1,11 @@
 {
-  "name": "vrei_sa_fii_milionar",
+  "name": "ReactMadness",
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
   "dependencies": {
     "express": "^4.13.3",
-    "oracledb": "^1.5.0"
+    "mysql": "^2.5.4"
   },
   "devDependencies": {},
   "scripts": {
@@ -13,4 +13,5 @@
   },
   "author": "",
   "license": "ISC"
+
 }

@@ -49,8 +49,17 @@ var bodyParser = require('body-parser')
 var crypto = require('crypto');
 
 var async = require('async');
-
 var cheerio = require('cheerio');
+
+var mysql = require('mysql');
+var pool = mysql.createPool({
+    connectionLimit: 100, //important
+    host: 'localhost',
+    user: 'root',
+    password: 'root',
+    database: 'react_madness'
+});
+
 
 app.use(express.static(rootDir));
 app.use(session({
@@ -70,191 +79,282 @@ var sess;
 
 
 //MODIFIED
-app.get('/logout',function(request,response)
-        {
-            request.session.destroy(function(err)
-            {
-                if(err)
-                {
-                    console.log(err);
-                }
-                else
-                {
-                    sess = null;
-                    response.sendFile(rootDir + '/index.html');
-                }
+app.get('/logout', function (request, response) {
+    request.session.destroy(function (err) {
+        if (err) {
+            console.log(err);
+        }
+        else {
+            sess = null;
+            response.sendFile(rootDir + '/index.html');
+        }
+    });
+});
+
+//insert a user through a form
+app.post('/registerUser', function (request, response) {
+
+    //insertUserIntoDB(pool, request, response);
+    registerUser(request, response);
+
+});
+
+//insert an admin through a form
+app.post('/registerAdmin', function (request, response) {
+
+    //insertAdminIntoDB(pool, request, response);
+
+});
+
+//authenticate a user through a form
+app.post('/loginUser', function (request, response) {
+
+    validateUser(request, response);
+
+});
+
+//authenticate an admin through a form
+app.post('/loginAdmin', function (request, response) {
+
+    //validateAdmin(pool, request, response);
+
+});
+
+app.get("/workspace", function (request, response) {
+
+    console.log('workspace');
+
+    if (sess) {
+        if (sess.username) {
+            fs.readFile(rootDir + '/workspace.html', function (err, data) {
+
+                var $ = cheerio.load(data);
+
+                $('#idWelcome').append('Welcome ' + sess.username);
+
+                response.send($.html());
             });
-        });
 
-        //insert a user through a form
-        app.post('/registerUser', function(request, response) {
+            //response.sendFile(rootDir + '/VreiSaFiiMilionarGame.html');                    
+        } else {
+            response.write('<h1>Please login first</h1>');
+            response.end();
+        }
 
-            //insertUserIntoDB(pool, request, response);
-
-        });
-
-        //insert an admin through a form
-        app.post('/registerAdmin', function(request, response) {
-
-            //insertAdminIntoDB(pool, request, response);
-
-        });
-
-        //authenticate a user through a form
-        app.post('/loginUser', function(request, response) {
-
-           validateUser(request, response);
-
-        });
-
-        //authenticate an admin through a form
-        app.post('/loginAdmin', function(request, response) {
-
-            //validateAdmin(pool, request, response);
-
-        });
-
-        app.get("/VreiSaFiiMilionarGame", function(request, response) {
-
-            console.log('VreiSaFiiMilionarGame');
-
-            if (sess) {
-                if (sess.username) {
-                    fs.readFile(rootDir + '/VreiSaFiiMilionarGame.html', function(err, data) {
-
-                        var $ = cheerio.load(data);
-
-                        $('#idWelcome').append('Welcome ' + sess.username);
-
-                        response.send($.html());
-                    });
-
-                    //response.sendFile(rootDir + '/VreiSaFiiMilionarGame.html');                    
-                } else {
-                    response.write('<h1>Please login first</h1>');
-                    response.end();
-                }
-
-            } else {
-                response.write('<h1>Please login first</h1>');
-                response.end();
-            }
-
-        });
-
-        app.get("/administratorPage", function(request, response) {
-
-            console.log('administratorPage');
-
-            if (sess) {
-                if (sess.username && sess.admin === true) {
-                    fs.readFile(rootDir + '/administratorPage.html', function(err, data) {
-
-                        var $ = cheerio.load(data);
-
-                        $('#idWelcome').append('Welcome ' + sess.username);
-
-                        response.send($.html());
-                    });
-
-                    //response.sendFile(rootDir + '/VreiSaFiiMilionarGame.html');                    
-                } else {
-                    response.write('<h1>Please login first</h1>');
-                    response.end();
-                }
-
-            } else {
-                response.write('<h1>Please login first</h1>');
-                response.end();
-            }
+    } else {
+        response.write('<h1>Please login first</h1>');
+        response.end();
+    }
 
 
-        });
+
+});
 
 
-        app.get("/adaugaIntrebare", function(request, response) {
 
-            console.log('adaugaIntrebare');
+app.get("/VreiSaFiiMilionarGame", function (request, response) {
 
-            if (sess) {
-                if (sess.username && sess.admin === true) {
-                    fs.readFile(rootDir + '/adaugaIntrebare.html', function(err, data) {
+    console.log('VreiSaFiiMilionarGame');
 
-                        var $ = cheerio.load(data);
+    if (sess) {
+        if (sess.username) {
+            fs.readFile(rootDir + '/VreiSaFiiMilionarGame.html', function (err, data) {
 
-                        $('#idWelcome').append('Welcome ' + sess.username);
+                var $ = cheerio.load(data);
 
-                        response.send($.html());
-                    });
+                $('#idWelcome').append('Welcome ' + sess.username);
 
-                    //response.sendFile(rootDir + '/VreiSaFiiMilionarGame.html');                    
-                } else {
-                    response.write('<h1>Please login first</h1>');
-                    response.end();
-                }
+                response.send($.html());
+            });
 
-            } else {
-                response.write('<h1>Please login first</h1>');
-                response.end();
-            }
+            //response.sendFile(rootDir + '/VreiSaFiiMilionarGame.html');                    
+        } else {
+            response.write('<h1>Please login first</h1>');
+            response.end();
+        }
 
+    } else {
+        response.write('<h1>Please login first</h1>');
+        response.end();
+    }
 
-        });
+});
 
+app.get("/administratorPage", function (request, response) {
 
-        app.get("/adaugaAdministrator", function(request, response) {
+    console.log('administratorPage');
 
-            console.log('adaugaAdministrator');
+    if (sess) {
+        if (sess.username && sess.admin === true) {
+            fs.readFile(rootDir + '/administratorPage.html', function (err, data) {
 
-            if (sess) {
-                if (sess.username && sess.admin === true) {
-                    fs.readFile(rootDir + '/adaugaAdministrator.html', function(err, data) {
+                var $ = cheerio.load(data);
 
-                        var $ = cheerio.load(data);
+                $('#idWelcome').append('Welcome ' + sess.username);
 
-                        $('#idWelcome').append('Welcome ' + sess.username);
+                response.send($.html());
+            });
 
-                        response.send($.html());
-                    });
+            //response.sendFile(rootDir + '/VreiSaFiiMilionarGame.html');                    
+        } else {
+            response.write('<h1>Please login first</h1>');
+            response.end();
+        }
 
-                    //response.sendFile(rootDir + '/VreiSaFiiMilionarGame.html');                    
-                } else {
-                    response.write('<h1>Please login first</h1>');
-                    response.end();
-                }
-
-            } else {
-                response.write('<h1>Please login first</h1>');
-                response.end();
-            }
-
-
-        });
+    } else {
+        response.write('<h1>Please login first</h1>');
+        response.end();
+    }
 
 
-        app.listen(portid, function() {
-            console.log("Server running at http://localhost:" + portid);
-        });
+});
+
+
+app.get("/adaugaIntrebare", function (request, response) {
+
+    console.log('adaugaIntrebare');
+
+    if (sess) {
+        if (sess.username && sess.admin === true) {
+            fs.readFile(rootDir + '/adaugaIntrebare.html', function (err, data) {
+
+                var $ = cheerio.load(data);
+
+                $('#idWelcome').append('Welcome ' + sess.username);
+
+                response.send($.html());
+            });
+
+            //response.sendFile(rootDir + '/VreiSaFiiMilionarGame.html');                    
+        } else {
+            response.write('<h1>Please login first</h1>');
+            response.end();
+        }
+
+    } else {
+        response.write('<h1>Please login first</h1>');
+        response.end();
+    }
+
+
+});
+
+
+app.get("/adaugaAdministrator", function (request, response) {
+
+    console.log('adaugaAdministrator');
+
+    if (sess) {
+        if (sess.username && sess.admin === true) {
+            fs.readFile(rootDir + '/adaugaAdministrator.html', function (err, data) {
+
+                var $ = cheerio.load(data);
+
+                $('#idWelcome').append('Welcome ' + sess.username);
+
+                response.send($.html());
+            });
+
+            //response.sendFile(rootDir + '/VreiSaFiiMilionarGame.html');                    
+        } else {
+            response.write('<h1>Please login first</h1>');
+            response.end();
+        }
+
+    } else {
+        response.write('<h1>Please login first</h1>');
+        response.end();
+    }
+
+
+});
+
+
+app.listen(portid, function () {
+    console.log("Server running at http://localhost:" + portid);
+});
 //MODIFIED
 
 
-function validateUser(request, response)
-{
+function registerUser(request, response) {
+
     var username = request.body.username;
     var password = request.body.password;
 
+    pool.getConnection(function (err, connection) {
 
-    //TODO:
+        if (err) {
+            response.json({ "code": 100, "status": "Error in connection database" });
+            return;
+        }
 
-    
-
-
-
-
-
+        query = "insert into users(username,password,types_of_users_id) values(\""+username+"\",\""+password+"\",1)";
 
 
-    response.send(request.body);
+        connection.query(query, function (err, rows) {
+            connection.release();
+            if (!err) {
+
+                response.json("success");
+                
+            }
+            
+        });
+
+        connection.on('error', function (err) {
+            response.json({ "code": 100, "status": "Error in connection database" });
+            return;
+        });
+
+    });
+
+}
+
+
+function validateUser(request, response) {
+    var username = request.body.username;
+    var password = request.body.password;
+
+    pool.getConnection(function (err, connection) {
+
+        if (err) {
+            response.json({ "code": 100, "status": "Error in connection database" });
+            return;
+        }
+
+        query = "select count(*) as cnt from users where username=\"" +
+            username + "\" and password=\"" + password + "\"";
+
+        connection.query(query, function (err, rows) {
+            connection.release();
+            if (!err) {
+
+                //TODO: encapsulate response in a message object
+                //TODO: encryption!!
+                if (rows[0].cnt > 0) {
+                    
+                    sess = request.session;
+                    sess.username = request.body.username;
+                    sess.admin = false;
+
+
+                    response.json("success");
+
+                }
+                else {
+                    response.json("Failed");
+                }
+            }
+
+        });
+
+        connection.on('error', function (err) {
+            response.json({ "code": 100, "status": "Error in connection database" });
+            return;
+        });
+
+    });
+
 }
 
 

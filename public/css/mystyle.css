@@ -137,15 +137,6 @@ button:hover
 	border:1px;
 }
 
-header
-{
-	text-align: right;
-//	background-color:gray;
-	color:white;
-	
-}
-
-
 footer {
     
     color:white;
@@ -192,7 +183,7 @@ aside
 a
 {
 	text-decoration: none;
-	color:white;
+	
 }
 a:hover
 {
