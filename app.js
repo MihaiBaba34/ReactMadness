@@ -49,12 +49,7 @@ app.use(bodyParser.urlencoded({
 
 
 app.listen(portid, function () {
-    console.log("Server running at http://localhost:" + portid);
-
-    var button = "button";
-    //var returnedVariable = reactNativeGenerator.generate(button);
-    reactNativeGenerator.main();
-    
+    console.log("Server running at http://localhost:" + portid);   
 });
 
 
@@ -68,59 +63,70 @@ app.post('/login', function (request, response) {
     validateUser(request, response);
 
 });
+// will be used to get  used by it's id
+app.get('/user/:userId', function (request, response) {
 
-app.post('/register', function (request, response) {
+    getUser(request, response);
+
+});
+// handles the register form and creates a new user
+app.post('/user', function (request, response) {
 
     registerUser(request, response);
 
 });
+// handles the edit form and updates a certain user intentified by id, if it doesn't exist create one
+app.put('/user/:userId', function (request, response) {
 
-app.get('/projects', function (request, response) {
+    updateUser(request, response);
+
+});
+// deletes a existing user
+app.delete('/user/:userId', function (request, response) {
+
+    deleteUser(request, response);
+
+});
+// returns a list of all the projects of the user identified by id
+app.get('/projects/:userId', function (request, response) {
 
     getProjects(request, response);
 
 });
-
-app.post('/createProject', function (request, response) {
+// adds a new project to the curent list of projects of the user identified by id
+app.post('/projects/:userId', function (request, response) {
 
     createProject(request, response);
 
 });
+// get a project identified by id
+app.get('/project/:projectId', function (request, response) {
 
-app.delete('/deleteProject', function (request, response) {
+    getProject(request, response);
+
+});
+// update a project identified by id, if it doesn't exist create one
+app.put('/project/:projectId', function (request, response) {
+
+    updateProject(request, response);
+
+});
+// delete a project intentified by project id
+app.delete('/project/:projectId', function (request, response) {
 
     deleteProject(request, response);
 
 });
-
-app.get('/viewProject', function (request, response) {
-
-    viewProject(request, response);
-
-});
-
-app.post('/modifyProjectName', function (request, response) {
-
-    modifyProjectName(request, response);
-
-});
-
-app.post('/createControl', function (request, response) {
+// create a new control
+app.post('/control', function (request, response) {
 
     createControl(request, response);
 
 });
 
-
-
-
-
-
-
-
 //MODIFIED
 function createControl(request, response) {
-    
+
     var proj_id = request.body.project_id;
     var page_id = request.body.page_id;
     var position = request.body.position;
@@ -154,7 +160,7 @@ function createControl(request, response) {
 }
 
 function modifyProjectName(request, response) {
-    
+
     var prj_id = request.body.project_id;
     var new_project_name = request.body.project_name;
 
@@ -184,47 +190,105 @@ function modifyProjectName(request, response) {
     });
 }
 
+function getProjects(request, response) {
 
-function viewProject(request, response) {
+    var userId = request.params.userId;
 
-    var prj_id = request.body.project_id;
+    console.log("getoricegst" + userId) ;
 
     pool.getConnection(function (err, connection) {
 
         if (err) {
-            response.json({ code: 100, status: "Error in connection database" });
+            response.json({ code: 100, status: "Error while connecting to the database." });
             return;
         }
 
-        query = "select prj.name as project_name, pag.name as page_name, c.position, c.name as control_position from " + 
-        "projects prj join pages pag on prj.id = pag.project_id join controls c on pag.id = c.page_id where proj.id=\""+prj_id+"\")";
+        query = "SELECT id, name FROM projects WHERE owner_id=\"" + userId + "\"";
         connection.query(query, function (err, rows) {
             connection.release();
             if (!err) {
-
-                if (rows.length > 0) {
-
-                    response.json({ code: 200, status: "Success", project: rows });
-                }
-                else {
-                    response.json({ code: 101, status: "Error" });
-                }
+                response.json({ code: 200, status: "Success", projects: rows });
             }
 
         });
 
         connection.on('error', function (err) {
-            response.json({ code: 100, status: "Error in connection database" });
+            response.json({ code: 100, status: "Error while connecting to the database." });
             return;
         });
     });
 }
 
+function createProject(request, response) {
+    var userId = request.params.userId;
+    var projectName = request.body.projectName;
+    console.log(userId + "  " + projectName);
+    pool.getConnection(function (err, connection) {
 
+        if (err) {
+            response.json({ code: 100, status: "EError while connecting to the database." });
+            return;
+        }
 
+        query = "INSERT INTO projects(name, owner_id) VALUES(\"" + projectName + "\",\"" + userId + "\" )";
+        connection.query(query, function (err, rows) {
+            connection.release();
+            if (!err) {
+                response.json({ code: 200, status: "Success" });
+
+                //in case of success initiate an empty project with the given name
+                
+
+            }
+            else {
+                response.json({ code: 101, status: "Error" });
+            }
+
+        });
+
+        connection.on('error', function (err) {
+            response.json({ code: 100, status: "Error while connecting to the database." });
+            return;
+        });
+    });
+}
+
+function getProject(request, response) {
+
+    var projectId = request.params.projectId;
+
+    pool.getConnection(function (err, connection) {
+
+        if (err) {
+            response.json({ code: 100, status: "Error while connecting to the database." });
+            return;
+        }
+
+        query = "SELECT prj.name AS project_name, pag.name as page_name, c.position, c.name AS control_position FROM " + 
+        "projects prj JOIN pages pag ON prj.id = pag.project_id JOIN controls c ON pag.id = c.page_id WHERE proj.id=\""+projectId+"\")";
+    connection.query(query, function (err, rows) {
+        connection.release();
+        if (!err) {
+
+            if (rows.length > 0) {
+
+                response.json({ code: 200, status: "Success", project: rows });
+            }
+            else {
+                response.json({ code: 101, status: "Error" });
+            }
+        }
+    });
+
+    connection.on('error', function (err) {
+        response.json({ code: 100, status: "Error while connecting to the database." });
+        return;
+    });
+});
+}
 
 function deleteProject(request, response) {
-    
+
     var prj_id = request.body.project_id;
 
     pool.getConnection(function (err, connection) {
@@ -252,75 +316,6 @@ function deleteProject(request, response) {
         });
     });
 }
-
-
-function createProject(request, response) {
-    var token = request.body.token;
-    var prj_name = request.body.project_name;
-
-    pool.getConnection(function (err, connection) {
-
-        if (err) {
-            response.json({ code: 100, status: "Error in connection database" });
-            return;
-        }
-
-        query = "insert into projects(name, owner_id) values(\"" + prj_name + "\",\"" + token + "\" )";
-        connection.query(query, function (err, rows) {
-            connection.release();
-            if (!err) {
-                response.json({ code: 200, status: "Success", project_id: rows.insertId });
-            }
-            else {
-                response.json({ code: 101, status: "Error" });
-            }
-
-        });
-
-        connection.on('error', function (err) {
-            response.json({ code: 100, status: "Error in connection database" });
-            return;
-        });
-    });
-}
-
-
-function getProjects(request, response) {
-
-    var token = request.body.token;
-
-    pool.getConnection(function (err, connection) {
-
-        if (err) {
-            response.json({ code: 100, status: "Error in connection database" });
-            return;
-        }
-
-        query = "select id, name from projects where owner_id=(select id from users where username=\"" + token + "\")";
-        connection.query(query, function (err, rows) {
-            connection.release();
-            if (!err) {
-
-                if (rows.length > 0) {
-
-                    response.json({ code: 200, status: "Success", projectsIDs: rows });
-                }
-                else {
-                    response.json({ code: 101, status: "Error" });
-                }
-            }
-
-        });
-
-
-        connection.on('error', function (err) {
-            response.json({ code: 100, status: "Error in connection database" });
-            return;
-        });
-    });
-}
-
-
 
 function registerUser(request, response) {
 
@@ -353,12 +348,14 @@ function registerUser(request, response) {
     });
 }
 
-
 function validateUser(request, response) {
     var username = request.body.username;
     var password = request.body.password;
     console.log(username);
     console.log(password);
+
+
+    console.log("sdfsfsf");
     pool.getConnection(function (err, connection) {
 
         if (err) {
@@ -366,14 +363,15 @@ function validateUser(request, response) {
             return;
         }
 
-        query = "select id as token from users where username=\"" +
-            username + "\" and password=\"" + password + "\"";
+        query = "select id from users where username=\"" +
+        username + "\" and password=\"" + password + "\"";
 
         connection.query(query, function (err, rows) {
             connection.release();
             if (!err) {
                 if (rows.length > 0) {
-                    response.json({ code: 200, status: "Success", response: rows[0].token });
+                    response.json({ code: 200, status: "Success", userId: rows[0].id });
+
                 }
                 else {
                     response.json({ "code": 100, "status": "Error at database" });

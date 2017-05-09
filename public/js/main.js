@@ -7,8 +7,9 @@ var raspunsCorect = "";
 var pragAtins = 0;
 var castigulAcumulat = 0;
 var vectorCastiguri = [100, 200, 300, 500, 1000, 1500,
-    3000, 5000, 7500, 15000, 25000,
-    50000, 100000, 250000, 1000000];
+3000, 5000, 7500, 15000, 25000,
+50000, 100000, 250000, 1000000];
+var userId;
 
 
 
@@ -32,7 +33,7 @@ $(document).ready(function () {
                 type: "POST",
                 url: url,
                 data: $("#formInregistrareUser").serialize(), // serializes the form's elements.
-                    success: function (obj) {
+                success: function (obj) {
                     console.log(obj);
                     //TODO: process received response message
                     if (obj.status === "Success") {
@@ -45,7 +46,7 @@ $(document).ready(function () {
 
     });
 
-    $("#formInregistrareAdmin").submit(function (e) {
+$("#formInregistrareAdmin").submit(function (e) {
 
         e.preventDefault(); // avoid to execute the actual submit of the form.
 
@@ -61,7 +62,9 @@ $(document).ready(function () {
         });
     });
 
-    $("#formLoginUser").submit(function (e) {
+$("#formLoginUser").submit(function (e) {
+
+        console.log("login")
 
         e.preventDefault(); // avoid to execute the actual submit of the form.
         var url = "http://localhost:7000/login";
@@ -71,14 +74,59 @@ $(document).ready(function () {
             data: $("#formLoginUser").serialize(), // serializes the form's elements.
             success: function (data) {                    
                 console.log("From authentication");
+                userId = data;
                 console.log(data);
-                console.log("From authentication");                  
+                console.log("From authentication"); 
+                getProjects();
             }
         });
     });
 
+function getProjects(){
+    $.ajax({
+        type: "GET",
+        url: "/projects/" + userId,
+        host: "http://localhost:7000",
+        success: function (data) {
+            var body = WrapProjects(data.projects);
+            
 
-    $("#formLoginAdministrator").submit(function (e) {
+            document.getElementsByTagName('body')[0].innerHTML = body;
+
+
+        }
+    });
+}
+
+function WrapProjects(projects){
+    var body = "<table>";
+    body += "<th>";
+    body += "Id";
+    body += "</th";
+    body += "<th>";
+    body += "Name";
+    body += "</th";    
+    for(project in projects){
+        body += "<tr>";
+
+        body += "<td>";
+        body += project.id;        
+        body += "</td";
+        body += "<td>";
+        body += project.name;        
+        body += "</td";
+
+        body += "</tr";
+    }
+    body += "</table>"
+
+    body += '<button onClick="createProject()">Create Project</button>';
+
+    return body;
+}
+
+
+$("#formLoginAdministrator").submit(function (e) {
 
         e.preventDefault(); // avoid to execute the actual submit of the form.
 
@@ -102,7 +150,25 @@ $(document).ready(function () {
 
 });
 
+function createProject(){
 
+    console.log(userId);
+
+    $.ajax({
+        type: "POST",
+        url: "/projects/" + userId.userId,
+        host: "http://localhost:7000",
+        data: { projectName : "HelloWorld" },
+        success: function (data) {
+            if (data.isValid === 1) {
+                window.location.href = "/projects/" + userId.userId;
+            }
+            else {
+                alert("Error while creating project");
+            }
+        }
+    });
+}
 
 
 
