@@ -338,7 +338,8 @@ function registerUser(request, response) {
 function validateUser(request, response) {
     var username = request.body.username;
     var password = request.body.password;
-
+    console.log(username);
+    console.log(password);
     pool.getConnection(function (err, connection) {
 
         if (err) {
@@ -352,23 +353,19 @@ function validateUser(request, response) {
         connection.query(query, function (err, rows) {
             connection.release();
             if (!err) {
-
                 if (rows.length > 0) {
-
                     response.json({ code: 200, status: "Success", response: rows[0].token });
                 }
                 else {
                     response.json({ "code": 100, "status": "Error at database" });
                 }
             }
-
         });
 
         connection.on('error', function (err) {
             response.json({ "code": 100, "status": "Error in connection database" });
             return;
         });
-
     });
 
 }

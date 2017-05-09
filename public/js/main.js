@@ -17,7 +17,7 @@ $(document).ready(function () {
 
         e.preventDefault(); // avoid to execute the actual submit of the form.
 
-        var url = "http://localhost:7000/registerUser";
+        var url = "http://localhost:7000/register";
 
         var username = $("#formInregistrareUser").find('input[name="username"]').val();
         var password = $("#formInregistrareUser").find('input[name="password"]').val();
@@ -32,10 +32,10 @@ $(document).ready(function () {
                 type: "POST",
                 url: url,
                 data: $("#formInregistrareUser").serialize(), // serializes the form's elements.
-                success: function (data) {
-
+                    success: function (obj) {
+                    console.log(obj);
                     //TODO: process received response message
-                    if (data === "success") {
+                    if (obj.status === "Success") {
                         window.location.href = "/index.html";
                     }
 
@@ -64,38 +64,17 @@ $(document).ready(function () {
     $("#formLoginUser").submit(function (e) {
 
         e.preventDefault(); // avoid to execute the actual submit of the form.
-
-        var url = "http://localhost:7000/loginUser";
-        var myData = "username=mihai&password=pass";
-        var method = "GET";
-
-
-
-        var username = $("#formLoginUser").find('input[name="username"]').val();
-        var password = $("#formLoginUser").find('input[name="password"]').val();
-
-        // if (username === "" || password === "") {
-        //     alert("Username or password should not be empty!");
-        // }
-        // else {
-
-            //console.log($("#formLoginUser").serialize());
-            $.ajax({
-                type: method,
-                url: url,
-                data: myData, // serializes the form's elements.
-                success: function (data) {
-                    
-                    console.log("From authentication");
-                    console.log(data);
-                    console.log("From authentication");
-            
-                    
-                }
-            });
-//        }
-
-
+        var url = "http://localhost:7000/login";
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: $("#formLoginUser").serialize(), // serializes the form's elements.
+            success: function (data) {                    
+                console.log("From authentication");
+                console.log(data);
+                console.log("From authentication");                  
+            }
+        });
     });
 
 
