@@ -27,6 +27,13 @@ var pool = mysql.createPool({
     database: 'react_madness'
 });
 
+var portid = 7000; // HTTP listening port number
+var sess;
+
+//react native code generator
+var reactNativeGenerator = require("./ReactNativeGenerator");
+
+
 
 app.use(express.static(rootDir));
 app.use(session({
@@ -41,8 +48,18 @@ app.use(bodyParser.urlencoded({
 
 
 
-var portid = 7000; // HTTP listening port number
-var sess;
+app.listen(portid, function () {
+    console.log("Server running at http://localhost:" + portid);
+
+    var button = "button";
+    //var returnedVariable = reactNativeGenerator.generate(button);
+    reactNativeGenerator.main();
+    
+});
+
+
+
+
 
 
 //MODIFIED
@@ -94,9 +111,11 @@ app.post('/createControl', function (request, response) {
 
 });
 
-app.listen(portid, function () {
-    console.log("Server running at http://localhost:" + portid);
-});
+
+
+
+
+
 
 
 //MODIFIED
