@@ -34,7 +34,6 @@ var sess;
 var reactNativeGenerator = require("./ReactNativeGenerator");
 
 
-
 app.use(express.static(rootDir));
 app.use(session({
     secret: 'ssshhhhh',
@@ -46,20 +45,11 @@ app.use(bodyParser.urlencoded({
     extended: false
 }));
 
-
-
 app.listen(portid, function () {
     console.log("Server running at http://localhost:" + portid);
 
-    var button = "button";
-    //var returnedVariable = reactNativeGenerator.generate(button);
-    reactNativeGenerator.main();
-    
+    reactNativeGenerator.initProject("secondsecondProject");    
 });
-
-
-
-
 
 
 //MODIFIED
