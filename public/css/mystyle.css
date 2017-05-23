@@ -194,3 +194,9 @@ a:hover
 {
 	margin-top:150px;
 }
+
+.error
+{
+	color: red;
+	text-align: center;
+}
