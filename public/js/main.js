@@ -1,34 +1,18 @@
-var selectedItem = "E";
-var level = 1;
-var optiune5050 = 1;
-var optiuneIntrPublicul = 1;
-var optiuneSunaPrieten = 1;
-var raspunsCorect = "";
-var pragAtins = 0;
-var castigulAcumulat = 0;
-var vectorCastiguri = [100, 200, 300, 500, 1000, 1500,
-3000, 5000, 7500, 15000, 25000,
-50000, 100000, 250000, 1000000];
+var baseServerUrl = "http://localhost:7000";
+var baseServiceUrl = "http://localhost:8000";
 var userId;
-
-
 
 $(document).ready(function () {
     $("#formInregistrareUser").submit(function (e) {
-
         e.preventDefault(); // avoid to execute the actual submit of the form.
-
-        var url = "http://localhost:7000/register";
-
+        var url = baseServiceUrl + "/register";
         var username = $("#formInregistrareUser").find('input[name="username"]').val();
         var password = $("#formInregistrareUser").find('input[name="password"]').val();
-
         if (username === "" || password === "") {
             alert("Username or password should not be empty!");
         }
         else {
             console.log(username + " -> " + password);
-
             $.ajax({
                 type: "POST",
                 url: url,
@@ -39,19 +23,14 @@ $(document).ready(function () {
                     if (obj.status === "Success") {
                         window.location.href = "/index.html";
                     }
-
                 }
             });
         }
-
     });
 
-$("#formInregistrareAdmin").submit(function (e) {
-
+    $("#formInregistrareAdmin").submit(function (e) {
         e.preventDefault(); // avoid to execute the actual submit of the form.
-
-        var url = "http://localhost:7000/registerAdmin";
-
+        var url = "/registerAdmin";
         $.ajax({
             type: "POST",
             url: url,
@@ -62,71 +41,7 @@ $("#formInregistrareAdmin").submit(function (e) {
         });
     });
 
-$("#formLoginUser").submit(function (e) {
-
-        console.log("login")
-
-        e.preventDefault(); // avoid to execute the actual submit of the form.
-        var url = "http://localhost:7000/login";
-        $.ajax({
-            type: "POST",
-            url: url,
-            data: $("#formLoginUser").serialize(), // serializes the form's elements.
-            success: function (data) {                    
-                console.log("From authentication");
-                userId = data;
-                console.log(data);
-                console.log("From authentication"); 
-                getProjects();
-            }
-        });
-    });
-
-function getProjects(){
-    $.ajax({
-        type: "GET",
-        url: "/projects/" + userId,
-        host: "http://localhost:7000",
-        success: function (data) {
-            var body = WrapProjects(data.projects);
-            
-
-            document.getElementsByTagName('body')[0].innerHTML = body;
-
-
-        }
-    });
-}
-
-function WrapProjects(projects){
-    var body = "<table>";
-    body += "<th>";
-    body += "Id";
-    body += "</th";
-    body += "<th>";
-    body += "Name";
-    body += "</th";    
-    for(project in projects){
-        body += "<tr>";
-
-        body += "<td>";
-        body += project.id;        
-        body += "</td";
-        body += "<td>";
-        body += project.name;        
-        body += "</td";
-
-        body += "</tr";
-    }
-    body += "</table>"
-
-    body += '<button onClick="createProject()">Create Project</button>';
-
-    return body;
-}
-
-
-$("#formLoginAdministrator").submit(function (e) {
+    $("#formLoginAdministrator").submit(function (e) {
 
         e.preventDefault(); // avoid to execute the actual submit of the form.
 
@@ -145,23 +60,119 @@ $("#formLoginAdministrator").submit(function (e) {
                 }
             }
         });
-
     });
 
+    $("#formLoginUser").submit(function (e) {
+        e.preventDefault(); // avoid to execute the actual submit of the form.
+        var username = $("#formLoginUser").find('input[name="username"]').val();
+        var password = $("#formLoginUser").find('input[name="password"]').val();
+        console.log(username + " -> " + password);
+        if (username == "" || password == "") {
+            $(".error")[0].innerHTML = "Username or password should not be empty!";
+        }
+        else {
+            $.ajax({
+                type: "POST",
+                url: baseServiceUrl + "/login",
+                data: $("#formLoginUser").serialize(), // serializes the form's elements.
+                success: function (data) {                    
+                    console.log("Callback Login:");
+                    console.log(data); 
+                    userId = data.userId;
+                    getProjects();
+                },
+                error: function(jqXHR, exception) {
+                    if (jqXHR.status === 0) {
+                        $(".error")[0].innerHTML = 'Could not connect.\n Verify Network.';
+                    } else if (jqXHR.status == 404) {
+                        $(".error")[0].innerHTML = 'The username or password is wrong. Please try again.';
+                    } else if (jqXHR.status == 500) {
+                        $(".error")[0].innerHTML = 'Service had an internal error during login.';
+                    } else if (exception === 'parsererror') {
+                        $(".error")[0].innerHTML = 'Error while processing JSON response';
+                    } else if (exception === 'timeout') {
+                        $(".error")[0].innerHTML = 'The server did not respond in the given timeout.';
+                    } else if (exception === 'abort') {
+                        $(".error")[0].innerHTML = 'Error! Aborting Login process...';
+                    } else {
+                        alert('Uncaught Error.\n' + jqXHR.responseText);
+                    }
+                }
+            });
+        }
+    });
 });
 
+function getProjects(){
+    $.ajax({
+        type: "GET",
+        url: baseServiceUrl + "\\projects\\" + userId,
+        success: function (data) {
+            var body = WrapProjects(data.projects);
+            $('body')[0].innerHTML = body;
+        },
+        error: function(jqXHR, exception) {
+            if (jqXHR.status === 0) {
+                $(".error")[0].innerHTML = 'Could not connect.\n Verify Network.';
+            } else if (jqXHR.status == 404) {
+                $(".error")[0].innerHTML = 'The username or password is wrong. Please try again.';
+            } else if (jqXHR.status == 500) {
+                $(".error")[0].innerHTML = 'Service had an internal error during login.';
+            } else if (exception === 'parsererror') {
+                $(".error")[0].innerHTML = 'Error while processing JSON response';
+            } else if (exception === 'timeout') {
+                $(".error")[0].innerHTML = 'The server did not respond in the given timeout.';
+            } else if (exception === 'abort') {
+                $(".error")[0].innerHTML = 'Error! Aborting Login process...';
+            } else {
+                alert('Uncaught Error.\n' + jqXHR.responseText);
+            }
+        }
+    });
+}
+
+function WrapProjects(projects){
+    var body = "<div class=\"table-title\">";
+    body += "<h3>My projects</h3>";
+    body += "</div>";
+    body += "<table class=\"table-fill\">";
+    body += "<thead>";
+    body += "<tr>";
+    body += "<th class=\"text-left\">Project Id</th>";
+    body += "<th class=\"text-left\">Project Name</th>";
+    body += "</tr>";
+    body += "</thead>";
+    body += "<tbody class=\"table-hover\">";   
+    for(project in projects){
+        body += "<tr>";
+
+        body += "<td class=\"text-left\">";
+        body += project.id;        
+        body += "</td>";
+        body += "<td class=\"text-left\">";
+        body += project.name;        
+        body += "</td>";
+
+        body += "</tr>";
+    }
+    body += "</tbody>";
+    body += "</table></br>";
+    body += "<button class=\"table-title\" onClick=\"createProject()\">Create Project</button>";
+
+    return body;
+}
+
 function createProject(){
-
     console.log(userId);
-
     $.ajax({
         type: "POST",
-        url: "/projects/" + userId.userId,
-        host: "http://localhost:7000",
+        url: baseServiceUrl + "/projects/" + userId,
         data: { projectName : "HelloWorld" },
         success: function (data) {
-            if (data.isValid === 1) {
-                window.location.href = "/projects/" + userId.userId;
+            console.log("Create project callback:");
+            console.log(data);
+            if (data.insertedId > 0) {                
+                getProjects();
             }
             else {
                 alert("Error while creating project");
@@ -169,7 +180,3 @@ function createProject(){
         }
     });
 }
-
-
-
-

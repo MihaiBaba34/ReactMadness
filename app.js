@@ -34,7 +34,6 @@ var sess;
 var reactNativeGenerator = require("./ReactNativeGenerator");
 
 
-
 app.use(express.static(rootDir));
 app.use(session({
     secret: 'ssshhhhh',
@@ -46,15 +45,15 @@ app.use(bodyParser.urlencoded({
     extended: false
 }));
 
-
-
 app.listen(portid, function () {
+<<<<<<< HEAD
     console.log("Server running at http://localhost:" + portid);   
+=======
+    console.log("Server running at http://localhost:" + portid);
+
+    reactNativeGenerator.initProject("secondsecondProject");    
+>>>>>>> ccb003ebb48937171ef79d37ad16155a8640418b
 });
-
-
-
-
 
 
 //MODIFIED
