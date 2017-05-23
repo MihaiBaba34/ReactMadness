@@ -5,7 +5,7 @@ var userId;
 $(document).ready(function () {
     $("#formInregistrareUser").submit(function (e) {
         e.preventDefault(); // avoid to execute the actual submit of the form.
-        var url = baseServiceUrl + "/register";
+        var url = baseServiceUrl + "/user";
         var username = $("#formInregistrareUser").find('input[name="username"]').val();
         var password = $("#formInregistrareUser").find('input[name="password"]').val();
         if (username === "" || password === "") {
@@ -18,7 +18,12 @@ $(document).ready(function () {
                 url: url,
                 data: $("#formInregistrareUser").serialize(), // serializes the form's elements.
                 success: function (obj) {
+
+                    console.log("SUCCESS REGISTERING USER");
+                    console.log("OBJ");
                     console.log(obj);
+                    console.log("OBJ");
+
                     //TODO: process received response message
                     if (obj.status === "Success") {
                         window.location.href = "/index.html";
@@ -75,13 +80,18 @@ $(document).ready(function () {
                 type: "POST",
                 url: baseServiceUrl + "/login",
                 data: $("#formLoginUser").serialize(), // serializes the form's elements.
-                success: function (data) {                    
+                success: function (data) {
                     console.log("Callback Login:");
-                    console.log(data); 
+                    console.log(data);
                     userId = data.userId;
-                    getProjects();
+
+                    // Store
+                    localStorage.setItem("userID", userId);
+                    localStorage.setItem("username", username);
+
+                    window.location.href = baseServerUrl + "/projects.html";
                 },
-                error: function(jqXHR, exception) {
+                error: function (jqXHR, exception) {
                     if (jqXHR.status === 0) {
                         $(".error")[0].innerHTML = 'Could not connect.\n Verify Network.';
                     } else if (jqXHR.status == 404) {
@@ -103,15 +113,31 @@ $(document).ready(function () {
     });
 });
 
-function getProjects(){
+function getProjects() {
+
+
+    //alert("getProjects was called");
+    var userId = localStorage.getItem("userID");
+
     $.ajax({
         type: "GET",
-        url: baseServiceUrl + "\\projects\\" + userId,
+        url: baseServiceUrl + "/projects/" + userId,
         success: function (data) {
-            var body = WrapProjects(data.projects);
-            $('body')[0].innerHTML = body;
+
+
+            console.log("data received from projects:")
+            console.log(data);
+            console.log("data received from projects:")
+            //TODO
+
+            populateProjectsTable(data.projects);
+
+
+            // var body = WrapProjects(data.projects);
+            // $('body')[0].innerHTML = body;
+
         },
-        error: function(jqXHR, exception) {
+        error: function (jqXHR, exception) {
             if (jqXHR.status === 0) {
                 $(".error")[0].innerHTML = 'Could not connect.\n Verify Network.';
             } else if (jqXHR.status == 404) {
@@ -131,52 +157,171 @@ function getProjects(){
     });
 }
 
-function WrapProjects(projects){
-    var body = "<div class=\"table-title\">";
-    body += "<h3>My projects</h3>";
-    body += "</div>";
-    body += "<table class=\"table-fill\">";
-    body += "<thead>";
-    body += "<tr>";
-    body += "<th class=\"text-left\">Project Id</th>";
-    body += "<th class=\"text-left\">Project Name</th>";
-    body += "</tr>";
-    body += "</thead>";
-    body += "<tbody class=\"table-hover\">";   
-    for(project in projects){
-        body += "<tr>";
+function openModal(currentTrObject) {
+    console.log(currentTrObject);
+    var selected_project_id = currentTrObject.getElementsByTagName("td")[0].innerHTML;
+    var selected_project_name = currentTrObject.getElementsByTagName("td")[1].innerHTML;
 
-        body += "<td class=\"text-left\">";
-        body += project.id;        
-        body += "</td>";
-        body += "<td class=\"text-left\">";
-        body += project.name;        
-        body += "</td>";
-
-        body += "</tr>";
-    }
-    body += "</tbody>";
-    body += "</table></br>";
-    body += "<button class=\"table-title\" onClick=\"createProject()\">Create Project</button>";
-
-    return body;
+    $('#project_modal').modal('toggle');
+    localStorage.setItem("selected_project_id", selected_project_id);
+    localStorage.setItem("selected_project_name", selected_project_name);
 }
 
-function createProject(){
+function deleteProject() {
+    console.log("deleteProject");
+
+    console.log(localStorage.getItem("selected_project_id"));
+    console.log(localStorage.getItem("selected_project_name"));
+
+    //alert("getProjects was called");
+    var project_id = localStorage.getItem("selected_project_id");
+
+    $.ajax({
+        type: "DELETE",
+        url: baseServiceUrl + "/project/" + project_id,
+        success: function (data) {
+
+            if (data.status === "Success") {
+
+                console.log("data received from delete project:")
+                console.log(data);
+                console.log("data received from delete project:")
+
+                window.location.reload();
+
+            }
+        },
+
+    });
+
+
+    $('#project_modal').modal('hide');
+
+}
+
+function addButton() {
+
+    var buttonName = document.getElementById("inputButtonNameID").value;
+    var project_id = localStorage.getItem("selected_project_id");
+    //alert("Button " + buttonName + " added to the project!");
+
+    $.ajax({
+        type: "POST",
+        url: baseServiceUrl + "/control",
+        data: { 
+            projectId: project_id,
+            buttonName: buttonName             
+        },
+        success: function (data) {
+
+            if (data.status === "Success") {
+
+                console.log("data received from delete project:")
+                console.log(data);
+                console.log("data received from delete project:")
+
+                //window.location.reload();
+
+            }
+        },
+
+    });
+}
+
+function editProject() {
+    console.log("editProject");
+    console.log(localStorage.getItem("selected_project_id"));
+    console.log(localStorage.getItem("selected_project_name"));
+    $('#project_modal').modal('hide');
+
+    window.location.href = baseServerUrl + "/workspace.html";
+}
+
+function populateProjectsTable(projects) {
+
+    console.log(projects);
+    var projects_table = document.getElementById("projects_table");
+    var tbody = projects_table.getElementsByTagName("tbody")[0];
+
+    for (index in projects) {
+
+        var project = projects[index];
+
+        var tr = document.createElement("tr");
+        var td_project_id = document.createElement("td");
+        var td_project_name = document.createElement("td");
+
+        tr.setAttribute("onclick", "openModal(this)");
+
+        td_project_id.appendChild(document.createTextNode(project.id));
+        td_project_name.appendChild(document.createTextNode(project.name));
+
+        tr.appendChild(td_project_id);
+        tr.appendChild(td_project_name);
+        tbody.appendChild(tr);
+
+    }
+
+}
+
+function downloadProject() {
+    console.log(localStorage.getItem("selected_project_id"));
+    console.log(localStorage.getItem("selected_project_name"));
+
+    var project_id = localStorage.getItem("selected_project_id");
+
+    $.ajax({
+        type: "GET",
+        url: baseServiceUrl + "/download/" + project_id,
+        success: function (data) {
+
+            if (data.status === "Success") {
+
+                console.log("data received from download project:")
+                console.log(data);
+                console.log("data received from download project:")
+
+                var content = baseServiceUrl + "/app-release-unsigned.apk";
+                var dl = document.createElement('a');
+                dl.setAttribute('href', '');
+                dl.setAttribute('download', 'app-release.apk');
+                dl.click();
+            }
+        },
+
+    });
+
+    alert("Please wait until the project is built and downloaded..");
+}
+
+function createNewProject() {
+    var project_name_input = document.getElementById("project_name_textbox_id");
+    var project_name = project_name_input.value;
+    var userId = localStorage.getItem("userID");
+
+    console.log("project_name");
+    console.log(project_name);
+
+    console.log("userId");
     console.log(userId);
+
     $.ajax({
         type: "POST",
         url: baseServiceUrl + "/projects/" + userId,
-        data: { projectName : "HelloWorld" },
+        data: { projectName: project_name },
         success: function (data) {
             console.log("Create project callback:");
             console.log(data);
-            if (data.insertedId > 0) {                
-                getProjects();
+            if (data.status === "Success") {
+
+                alert("Project " + project_name + " was successfully created!");
+
+                window.location.reload();
             }
             else {
                 alert("Error while creating project");
             }
         }
     });
+
 }

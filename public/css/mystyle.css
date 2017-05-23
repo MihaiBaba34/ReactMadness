@@ -24,10 +24,10 @@
 {
 	//background-color:gray;
 }
+
 .Highlight
 {
-	background-color:#00CC00
-;
+	background-color:#00CC00;
 }
 .ButonRaspunsFinal
 {
@@ -39,16 +39,16 @@
 
 button
 {
-	border-radius: 10px;
+//border-radius: 10px;
 }
 
 button:hover
-{
+/*{
 	border: 2px solid #a1a1a1;
    	padding: 5px 20px; 
    	background: #dddddd;
     width: 150px;
-    border-radius: 25px;
+    border-radius: 25px;*/
 }
 
 

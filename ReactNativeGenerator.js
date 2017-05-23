@@ -1,15 +1,16 @@
 var cmd=require('node-cmd');
 var fs  = require("fs");
+var projects = "projects_path";
 
 module.exports = {
     initProject: function(projectName){
         return initProject(projectName);
     },
-    generate: function(control) {
-        return generate(projectName, control);
+    generate: function(projectName, buttonName) {
+        return generateButton(projectName, buttonName);
     },
-    build: function(){
-        return assembleRelease();
+    build: function(projectName){
+        return assembleRelease(projectName);
     },
     main: function(){
         return main();
@@ -24,14 +25,16 @@ function main()
 
 function generateButton(projectName, buttonName)
 {
+
+    console.log(projectName);
+    console.log(buttonName);
+
     var inViewStructure = false;
     var previousLine = "";
     var content = "";
 
-
-    fs.readFileSync('./'+projectName+'/index.android.js').toString().split('\n').forEach(function (line) {
+    fs.readFileSync('./' + projects + '/' +projectName+'/index.android.js').toString().split('\n').forEach(function (line) {
         
-
         if(previousLine.indexOf("<View") > -1) {
             inViewStructure = true;
         }
@@ -39,7 +42,7 @@ function generateButton(projectName, buttonName)
         if(line.indexOf("</View>") > -1) {
             
             inViewStructure = false;
-            line = "<Button onPress={() => {console.log(\"ceva\") }} title=\"Learn More\" />" + "\r\n" + line;
+            line = "<Button onPress={() => {console.log(\"ceva\") }} title=\"" + buttonName + "\" />" + "\r\n" + line;
 
         }
 
@@ -54,7 +57,7 @@ function generateButton(projectName, buttonName)
     });
 
 
-    fs.writeFileSync("./"+projectName+"/index.android.js", content.toString() + "\n");
+    fs.writeFileSync('./' + projects + '/' +projectName+'/index.android.js', content.toString() + "\n");
 
 }
 
@@ -77,28 +80,34 @@ function copyFileContent(savPath, srcPath) {
     });
 }
 
-function assembleRelease()
+function assembleRelease(projectName)
 {
     console.log("Start building...");
     cmd.get(
-        'cd ReactMadnessProject/android && gradlew assembleRelease',
+        'cd ' + projects + '/' + projectName + '/' + 'android && gradlew assembleRelease',
         function(err, data, stderr){
             console.log('Received output',data)
         }
     );
+    
 }
 
 function initProject(projectName){
+
+    console.log("initProject " + projectName + " from reactNativeGenerator...");
     cmd.get(
-        'react-native init ' + projectName.toString(),
+        'cd ' + projects + ' && react-native init ' + projectName.toString(),
         function(err, data, stderr){
             console.log('Received output',data)
         }
     );
+    console.log("initProject from reactNativeGenerator...");
 }
 
 function generate(control)
 {
+
+
     cmd.get(
         'react-native init ReactMadnessProject',
         function(err, data, stderr){

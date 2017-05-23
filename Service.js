@@ -15,6 +15,7 @@ var cors = require('cors');
 var reactNativeGenerator = require("./ReactNativeGenerator");
 
 var app = express();
+var rootDir = __dirname + '/projects_path';
 var portid = 8000; // HTTP listening port number
 var sess;
 var pool = mysql.createPool({
@@ -35,6 +36,8 @@ app.use(session({
 app.use(bodyParser.urlencoded({
     extended: false
 }));
+
+app.use(express.static(rootDir));
 
 app.listen(portid, function () {
     console.log("Server running at http://localhost:" + portid); 
@@ -75,6 +78,10 @@ app.post('/projects/:userId', function (request, response) {
 app.get('/project/:projectId', function (request, response) {
     getProject(request, response);
 });
+// download a project identified by id
+app.get('/download/:projectId', function (request, response) {
+    downloadProject(request, response);
+});
 // update a project identified by id, if it doesn't exist create one
 app.put('/project/:projectId', function (request, response) {
     updateProject(request, response);
@@ -85,7 +92,7 @@ app.delete('/project/:projectId', function (request, response) {
 });
 
 // create a new control
-app.post('/control', function (request, response) {
+app.post('/control', function (request, response) {    
     createControl(request, response);
 });
 /**************URL's and what they do******************/
@@ -313,6 +320,42 @@ function createProject(request, response) {
     });
 }
 
+function downloadProject(request,response)
+{
+    var projectId = request.params.projectId;
+    console.log("Download project with id " + projectId);
+    pool.getConnection(function (err, connection) {
+        if (err) {
+            response.json({ code: 100, status: "Error while connecting to the database." });
+            return;
+        }
+        var query = "SELECT name FROM projects WHERE id = " + projectId;
+	    connection.query(query, function (err, projects) {
+	        connection.release();
+	        if (!err) {
+	            if (projects.length > 0) {
+
+                    console.log("assembleRelease with name: " + projects[0].name);
+                    reactNativeGenerator.build(projects[0].name);
+	                
+                     response.json({ 
+	                	code: 200, 
+	                	status: "Success"
+	                });
+	            }
+	            else {
+	                response.json({ code: 101, status: "Error" });
+	            }
+	        }
+	    });
+
+    connection.on('error', function (err) {
+        response.json({ code: 100, status: "Error while connecting to the database." });
+        return;
+    });
+});
+}
+
 function getProject(request, response) {
     var projectId = request.params.projectId;
     console.log("Get project with id " + projectId);
@@ -381,14 +424,14 @@ function getControlsForPage(pageId){
 }
 
 function deleteProject(request, response) {
-    var prj_id = request.body.project_id;
-    console.log("Delete project with id " + projectId);
+    var prj_id = request.params.projectId;
+    console.log("Delete project with id " + prj_id);
     pool.getConnection(function (err, connection) {
         if (err) {
             response.json({ code: 100, status: "Error in connection database" });
             return;
         }
-        query = "DELETE FROM projects WHERE id = \"" + prj_id + "\"";
+        var query = "DELETE FROM projects WHERE id = \"" + prj_id + "\"";
         connection.query(query, function (err, rows) {
             connection.release();
             if (!err) {
@@ -407,33 +450,43 @@ function deleteProject(request, response) {
 }
 
 function createControl(request, response) {
-    var proj_id = request.body.project_id;
+    var proj_id = request.body.projectId;
+    var buttonName = request.body.buttonName;
+    var projectName = "myAwesomeProject";
+
     var page_id = request.body.page_id;
     var position = request.body.position;
     var control_type = request.body.control_type;
+    
+    console.log("request.body");
+    console.log(request.body);
+    console.log("request.body");
+    
+    reactNativeGenerator.generate(projectName, buttonName);
 
-    pool.getConnection(function (err, connection) {
-        if (err) {
-            response.json({ code: 100, status: "Error in connection database" });
-            return;
-        }
 
-        query = "INSERT INTO controls(position, page_id, control_type_id) "+
-        "VALUES(\"" + position + "\",\"" + page_id + "\",\"" + control_type + "\")";
+    // pool.getConnection(function (err, connection) {
+    //     if (err) {
+    //         response.json({ code: 100, status: "Error in connection database" });
+    //         return;
+    //     }
 
-        connection.query(query, function (err, rows) {
-            connection.release();
-            if (!err) {
-                response.json({ code: 200, status: "Success", control_id: rows.insertId });
-            }
-            else {
-                response.json({ code: 101, status: "Error" });
-            }
-        });
+    //     query = "INSERT INTO controls(position, page_id, control_type_id) "+
+    //     "VALUES(\"" + position + "\",\"" + page_id + "\",\"" + control_type + "\")";
 
-        connection.on('error', function (err) {
-            response.json({ code: 100, status: "Error in connection database" });
-            return;
-        });
-    });
+    //     connection.query(query, function (err, rows) {
+    //         connection.release();
+    //         if (!err) {
+    //             response.json({ code: 200, status: "Success", control_id: rows.insertId });
+    //         }
+    //         else {
+    //             response.json({ code: 101, status: "Error" });
+    //         }
+    //     });
+
+    //     connection.on('error', function (err) {
+    //         response.json({ code: 100, status: "Error in connection database" });
+    //         return;
+    //     });
+    // });
 }
