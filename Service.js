@@ -1,5 +1,6 @@
 'use strict';
 var http = require('http');
+var https = require('https');
 var fs = require('fs');
 var url = require('url');
 var path = require('path');
@@ -14,10 +15,6 @@ var cors = require('cors');
 //react native code generator
 var reactNativeGenerator = require("./ReactNativeGenerator");
 
-var app = express();
-var rootDir = __dirname + '/projects_path';
-var portid = 8000; // HTTP listening port number
-var sess;
 var pool = mysql.createPool({
     connectionLimit: 100, //important
     host: 'localhost',
@@ -25,6 +22,17 @@ var pool = mysql.createPool({
     password: 'root',
     database: 'react_madness'
 });
+
+var options = {
+  cert: fs.readFileSync('security/30423947.cert'),
+  key: fs.readFileSync('security/30423947.key')
+};
+var rootDir = __dirname + '/projects_path';
+var portid = 8443; // HTTPS listening port number
+var sess;
+
+var app = express();
+var httpsServer = https.createServer(options, app);
 
 app.use(cors());
 app.use(session({
@@ -39,8 +47,8 @@ app.use(bodyParser.urlencoded({
 
 app.use(express.static(rootDir));
 
-app.listen(portid, function () {
-    console.log("Server running at http://localhost:" + portid); 
+httpsServer.listen(portid, function () {
+    console.log("Server running at https://localhost:" + portid); 
 });
 
 /**************URL's and what they do******************/

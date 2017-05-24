@@ -1,5 +1,5 @@
-var baseServerUrl = "http://localhost:7000";
-var baseServiceUrl = "http://localhost:8000";
+var baseServerUrl = "http://localhost:8080";
+var baseServiceUrl = "https://localhost:8443";
 var userId;
 
 $(document).ready(function () {
