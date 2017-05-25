@@ -12,6 +12,7 @@ var async = require('async');
 var cheerio = require('cheerio');
 var mysql = require('mysql');
 var cors = require('cors');
+var crypto = require('crypto');
 //react native code generator
 var reactNativeGenerator = require("./ReactNativeGenerator");
 
@@ -50,6 +51,31 @@ app.use(express.static(rootDir));
 httpsServer.listen(portid, function () {
     console.log("Server running at https://localhost:" + portid); 
 });
+
+/**
+ * hash password with sha512.
+ * @function
+ * @param {string} password - List of required fields.
+ * @param {string} salt - Data to be validated.
+ */
+var sha512 = function(password, salt){
+    var hash = crypto.createHmac('sha512', salt); /** Hashing algorithm sha512 */
+    hash.update(password);
+    var value = hash.digest('hex');
+    return {
+        salt:salt,
+        passwordHash:value
+    };
+};
+
+function saltHashPassword(userpassword) {
+    var salt = 'secret'; /** Gives us salt of length 16 */
+    var passwordData = sha512(userpassword, salt);
+    console.log('UserPassword = '+userpassword);
+    console.log('Passwordhash = '+passwordData.passwordHash);
+    console.log('nSalt = '+passwordData.salt);
+    return passwordData.passwordHash;
+}
 
 /**************URL's and what they do******************/
 // handles the validation process foar an existing user
@@ -103,12 +129,17 @@ app.delete('/project/:projectId', function (request, response) {
 app.post('/control', function (request, response) {    
     createControl(request, response);
 });
+
+// get all types of controls
+app.get('/typesofcontrols', function (request, response) {    
+    getTypesOfControls(request, response);
+});
 /**************URL's and what they do******************/
 
 /**************Actual functions implementations******************/
 function validateUser(request, response) {
     var username = request.body.username;
-    var password = request.body.password;
+    var password = saltHashPassword(request.body.password);
     console.log("Login user: " + username + " -> " + password);
     pool.getConnection(function (err, connection) {
         if (err) {
@@ -176,14 +207,14 @@ function getUser(request, response) {
 
 function registerUser(request, response) {
     var username = request.body.username;
-    var password = request.body.password;
+    var password = saltHashPassword(request.body.password);
     console.log("Register user: " + username + " -> " + password);
     pool.getConnection(function (err, connection) {
         if (err) {
             response.json({ code: 100, status: "Error in connection database" });
             return;
         }
-        var query = "INSERT INTO users(username,password,types_of_users_id) VALUES(\"" + username + "\",\"" + password + "\",1)";
+        var query = "INSERT INTO users(username,password,types_of_users_id) VALUES(\'" + username + "\',\'" + password + "\',1)";
         connection.query(query, function (err, rows) {
             connection.release();
             if (!err) {
@@ -458,6 +489,62 @@ function deleteProject(request, response) {
 }
 
 function createControl(request, response) {
+    pool.getConnection(function (err, connection) {
+        if (err) {
+            response.json({ code: 100, status: "Error in connection database" });
+            return;
+        }
+
+        query = "INSERT INTO controls(position, page_id, control_type_id) "+
+        "VALUES(\"" + position + "\",\"" + page_id + "\",\"" + control_type + "\")";
+
+        connection.query(query, function (err, rows) {
+            connection.release();
+            if (!err) {
+                response.json({ code: 200, status: "Success", control_id: rows.insertId });
+            }
+            else {
+                response.json({ code: 101, status: "Error" });
+            }
+        });
+
+        connection.on('error', function (err) {
+            response.json({ code: 100, status: "Error in connection database" });
+            return;
+        });
+    });
+}
+
+function getTypesOfControls(request, response) {
+    console.log("Get controls from DB");
+    pool.getConnection(function (err, connection) {
+        if (err) {
+            response.json({ code: 100, status: "Error in connection database" });
+            return;
+        }
+        var query = "SELECT * FROM types_of_controls";
+        connection.query(query, function (err, rows) {
+            connection.release();
+            if (!err) {
+                response.json({ code: 200, status: "Success", typesOfControls : rows });
+            }
+            else {
+                response.json({ code: 101, status: "Error on getting types of controls" });
+            }
+        });
+
+        connection.on('error', function (err) {
+            response.json({ code: 100, status: "Error in connection database" });
+            return;
+        });
+    });
+}
+
+/*************Functions to be called after the user presses Download project****/
+function createControl(control name, pageId, projectId, ){
+    //First you build the project in the database then you create the project on the file system
+    // Afte the user downloaded the project it can be safely deleted from the service
+    //If the user will want to download again it will be rebuilt again
     var proj_id = request.body.projectId;
     var buttonName = request.body.buttonName;
     var projectName = "myAwesomeProject";
@@ -471,30 +558,5 @@ function createControl(request, response) {
     console.log("request.body");
     
     reactNativeGenerator.generate(projectName, buttonName);
-
-
-    // pool.getConnection(function (err, connection) {
-    //     if (err) {
-    //         response.json({ code: 100, status: "Error in connection database" });
-    //         return;
-    //     }
-
-    //     query = "INSERT INTO controls(position, page_id, control_type_id) "+
-    //     "VALUES(\"" + position + "\",\"" + page_id + "\",\"" + control_type + "\")";
-
-    //     connection.query(query, function (err, rows) {
-    //         connection.release();
-    //         if (!err) {
-    //             response.json({ code: 200, status: "Success", control_id: rows.insertId });
-    //         }
-    //         else {
-    //             response.json({ code: 101, status: "Error" });
-    //         }
-    //     });
-
-    //     connection.on('error', function (err) {
-    //         response.json({ code: 100, status: "Error in connection database" });
-    //         return;
-    //     });
-    // });
+    response.json({ code: 200, status: "Success", buttonName: buttonName });
 }

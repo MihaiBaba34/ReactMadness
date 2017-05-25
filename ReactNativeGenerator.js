@@ -58,7 +58,7 @@ function generateButton(projectName, buttonName)
 
 
     fs.writeFileSync('./' + projects + '/' +projectName+'/index.android.js', content.toString() + "\n");
-
+    console.log("Generated a new Button");
 }
 
 

@@ -89,7 +89,10 @@ $(document).ready(function () {
                     localStorage.setItem("userID", userId);
                     localStorage.setItem("username", username);
 
-                    window.location.href = baseServerUrl + "/projects.html";
+                    //TODO: process received response message
+                    if (data.status === "Success") {
+                        window.location.href = baseServerUrl + "/projects.html";
+                    }
                 },
                 error: function (jqXHR, exception) {
                     if (jqXHR.status === 0) {
@@ -114,8 +117,6 @@ $(document).ready(function () {
 });
 
 function getProjects() {
-
-
     //alert("getProjects was called");
     var userId = localStorage.getItem("userID");
 
@@ -124,17 +125,12 @@ function getProjects() {
         url: baseServiceUrl + "/projects/" + userId,
         success: function (data) {
 
-
             console.log("data received from projects:")
             console.log(data);
             console.log("data received from projects:")
             //TODO
 
             populateProjectsTable(data.projects);
-
-
-            // var body = WrapProjects(data.projects);
-            // $('body')[0].innerHTML = body;
 
         },
         error: function (jqXHR, exception) {
@@ -199,11 +195,11 @@ function deleteProject() {
 
 }
 
-function addButton() {
-
-    var buttonName = document.getElementById("inputButtonNameID").value;
+function addControl() {
+    var controlType = document.getElementById("typesOfControlsDropDown").value;
+    var buttonName = document.getElementById("controlName").value;
     var project_id = localStorage.getItem("selected_project_id");
-    //alert("Button " + buttonName + " added to the project!");
+    console.log("Trying to create a new button")
 
     $.ajax({
         type: "POST",
@@ -213,19 +209,31 @@ function addButton() {
             buttonName: buttonName             
         },
         success: function (data) {
-
-            if (data.status === "Success") {
-
-                console.log("data received from delete project:")
                 console.log(data);
-                console.log("data received from delete project:")
-
+            if (data.status === "Success") {
+                console.log("data received from add new button")
+                console.log(data);
+                console.log("data received from add new button")
+                if(controlType == "button"){
+                    addButtonToCanvas(data.buttonName);                    
+                }
                 //window.location.reload();
-
             }
         },
-
     });
+}
+
+function addButtonToCanvas(buttonName){
+    var canvas = document.getElementById("canvas");
+    var button = document.createElement("button");
+
+    button.setAttribute("id", "newButton");
+    button.setAttribute("class", "btn btn-secondary");
+    button.setAttribute("draggable", "true");
+    button.setAttribute("type", "button");
+    button.setAttribute("ondragstart", "drag(event)");
+    button.appendChild(document.createTextNode(buttonName));
+    canvas.appendChild(button);
 }
 
 function editProject() {
@@ -325,3 +333,84 @@ function createNewProject() {
     });
 
 }
+
+function getTypesOfControls() {
+    $.ajax({
+        type: "GET",
+        url: baseServiceUrl + "/typesofcontrols",
+        success: function (data) {
+
+            console.log("data received from get types of controls:")
+            console.log(data);
+            console.log("data received from get types of controls:")
+            //TODO
+
+            if(data.status == "Success"){
+                populateTypesOfControlsDropDown(data.typesOfControls);                
+            }
+
+        },
+        error: function (jqXHR, exception) {
+            if (jqXHR.status === 0) {
+                $(".error")[0].innerHTML = 'Could not connect.\n Verify Network.';
+            } else if (jqXHR.status == 404) {
+                $(".error")[0].innerHTML = 'Resource not Found. Check for possible causes.';
+            } else if (jqXHR.status == 500) {
+                $(".error")[0].innerHTML = 'Service had an internal error during login.';
+            } else if (exception === 'parsererror') {
+                $(".error")[0].innerHTML = 'Error while processing JSON response';
+            } else if (exception === 'timeout') {
+                $(".error")[0].innerHTML = 'The server did not respond in the given timeout.';
+            } else if (exception === 'abort') {
+                $(".error")[0].innerHTML = 'Error! Aborting Login process...';
+            } else {
+                alert('Uncaught Error.\n' + jqXHR.responseText);
+            }
+        }
+    });
+}
+
+function populateTypesOfControlsDropDown(typesOfControls) {
+
+    console.log(typesOfControls);
+    var typesOfControlsDropDown = document.getElementById("typesOfControlsDropDown");
+
+    for (index in typesOfControls) {
+        console.log()
+        var typeOfControl = typesOfControls[index];
+
+        var option = document.createElement("option");
+
+        option.setAttribute("value", typeOfControl.name);
+        option.setAttribute("onclick", "");
+        option.appendChild(document.createTextNode(typeOfControl.name));
+        typesOfControlsDropDown.appendChild(option);
+    }
+
+}
+
+function drag(event) {
+    var style = window.getComputedStyle(event.target, null);
+
+    console.log(style.getPropertyValue("left"));
+    console.log(style.getPropertyValue("right"));
+    event.dataTransfer.setData("text/plain", event.target.id + "," +
+    (parseInt(style.getPropertyValue("left"),10) - event.clientX) + ',' + (parseInt(style.getPropertyValue("top"),10) - event.clientY));
+} 
+
+function drop(event) {
+    var offset = event.dataTransfer.getData("text/plain").split(',');
+    var dm = document.getElementById(offset[0]);
+    dm.style.left = (event.clientX + parseInt(offset[1],10)) + 'px';
+    dm.style.top = (event.clientY + parseInt(offset[2],10)) + 'px';
+
+    console.log(dm.style.left);
+    console.log(dm.style.top);
+    event.preventDefault();
+    return false;
+}
+
+function dragover(event) {
+    event.preventDefault();
+    return false;
+} 

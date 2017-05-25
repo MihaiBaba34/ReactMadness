@@ -18,20 +18,22 @@
 <body>
 
 
-<aside>
+<aside >
   <h3 id = "welcome_user"></h3>
-  <h4 id = "project_name"></h4>
-
- <button class="btn btn-secondary" type="button" onclick="downloadProject()" >Download apk</button>
- <br>
- <br>
- <br>
- 
- Button name: <br>
- <input id="inputButtonNameID" type="text" name="buttonName"><br>
-  <br>
- <button class="btn btn-secondary" type="button" onclick="addButton()" >Add button</button>
-
+  <h4 id = "project_name"></h4><br> 
+  <div>
+    <span>
+      <div>
+        Control name: <input id="controlName" type="text"><br>
+        Control type: <select id="typesOfControlsDropDown"></select><br>
+        <button class="btn btn-secondary" type="button" onclick="addControl()" >Add control to curent page</button>
+      </div>
+    </span>
+    <span><div id="canvas" ondrop="drop(event)" ondragOver="dragover(event)"></div></span>
+    <div id="downloadBtn">        
+      <button class="btn btn-secondary" type="button" onclick="downloadProject()" >Download apk</button>
+    </div> 
+  </div>
 </aside>
 
 </body>
@@ -48,6 +50,7 @@
 
         var project_name = document.getElementById("project_name");
         project_name.innerHTML = "Project: " + localStorage.getItem("selected_project_name");
+        getTypesOfControls();
 
 	});
 
